@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+
+body {
+  @apply bg-white font-sans;
+}
+
+/* subtle card border like screenshot */
+.card-border {
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+/* pill badge */
+.badge {
+  @apply text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700;
+}
+
+/* table header style */
+.table-head {
+  background: transparent;
+  color: #374151;
+}
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+}
