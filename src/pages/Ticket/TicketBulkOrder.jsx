@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Upload, X, FileText } from "lucide-react";
-import axios from "axios";
-import { useAuthStore } from "../../stores/useAuthStore.js";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuthStore } from "../../stores/useAuthStore";
+import toast from "react-hot-toast";
 
-const CreateNewProductTicket = () => {
+
+const CreateBulkOrderTicket = () => {
   const [formData, setFormData] = useState({
-    productName: "",
-    ticketType: "new_product",
-    subject: "",
-    leadId: "",
-    notesFromSales: "",
-    expectedNewPrice: "",
-    preferredSupplier: "",
+    productId: "",
+    ticketType: "bulk_order",
+    quantity: "",
+    expectedUnitPrice: "",
     totalExpectedPrice: "",
-    expectedDeliveryDate: "",
-    assignedTo: "",
+    preferredSupplier: "",
+    deliveryDate: "",
+    reasonForBulkOrder: "",
     supportingDocs: [],
   });
 
@@ -23,11 +23,10 @@ const CreateNewProductTicket = () => {
   const [documentPreviews, setDocumentPreviews] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { token } = useAuthStore();
+  // console.log("This is the token: ", token)
 
   const backUrl = import.meta.env.VITE_BACK_URL || "http://localhost:4000";
-
-  // Get token from auth store
-  const token = useAuthStore((state) => state.token);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,7 +55,7 @@ const CreateNewProductTicket = () => {
   const handleFileInput = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       handleFiles(Array.from(e.target.files));
-      e.target.value = ""; // Reset input to allow re-uploading same file
+      e.target.value = "";
     }
   };
 
@@ -96,28 +95,25 @@ const CreateNewProductTicket = () => {
     documentPreviews.forEach((p) => URL.revokeObjectURL(p.url));
 
     setFormData({
-      productName: "",
-      ticketType: "new_product",
-      subject: "",
-      lead_id: "",
-      notesFromSales: "",
-      expectedNewPrice: "",
-      preferredSupplier: "",
+      productId: "",
+      quantity: "",
+      expectedUnitPrice: "",
       totalExpectedPrice: "",
-      expectedDeliveryDate: "",
-      assignedTo: "",
+      preferredSupplier: "",
+      deliveryDate: "",
+      reasonForBulkOrder: "",
       supportingDocs: [],
     });
     setDocumentPreviews([]);
   };
 
   const validate = () => {
-    if (!formData.productName.trim()) {
-      alert("Please enter a product name.");
+    if (!formData.productId.trim()) {
+      toast.success("Please enter a product name or SKU.");
       return false;
     }
-    if (!formData.subject.trim()) {
-      alert("Please enter a subject.");
+    if (!formData.quantity) {
+      toast.error("Please enter quantity.");
       return false;
     }
     return true;
@@ -136,26 +132,36 @@ const CreateNewProductTicket = () => {
           formData.supportingDocs.forEach((doc) => {
             payload.append("supportingDocs", doc);
           });
-        } else if (value !== "" || key === "lead_id") {
+        } else if (value !== "") {
           payload.append(key, value);
         }
       });
+
+      // Ensure ticketType is bulk_order (overwrites if already present)
+      payload.set("ticketType", "bulk_order");
 
       const headers = {
         Authorization: `Bearer ${token}`,
       };
 
-      const res = await axios.post(`${backUrl}/tickets`, payload, { headers });
+      const res = await axios.post(
+        `${backUrl}/tickets/bulk_order`,
+        payload,
+        { headers }
+      );
+
+      // ✅ axios already gives you parsed data as res.data
+      // const data = res.data; // use this if you need the response body
 
       if (res.status === 201 || res.status === 200) {
-        alert("Ticket submitted successfully!");
+        toast.success("Bulk order ticket submitted successfully!");
         resetForm();
       } else {
-        alert(`Unexpected response: ${res.status}`);
+        toast.error(`Unexpected response: ${res.status}`);
       }
     } catch (err) {
       console.error("Error submitting ticket:", err);
-      alert(err.response?.data?.message || "Error submitting ticket");
+      toast.error("Error submitting ticket");
     } finally {
       setSubmitting(false);
     }
@@ -169,148 +175,133 @@ const CreateNewProductTicket = () => {
     return () => {
       documentPreviews.forEach((p) => URL.revokeObjectURL(p.url));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className="min-h-screen bg-white p-6">
       {/* Breadcrumb */}
       <div className="text-sm text-blue-600 mb-6">
-        <span
-          onClick={() => navigate("/ticketspage")}
-          className="cursor-pointer hover:underline"
-        >
-          Tickets
-        </span>
-        <span className="text-gray-600"> / New Product</span>
+        <span onClick={() => (navigate('/ticketspage'))} className="cursor-pointer hover:underline">Tickets</span>
+        <span className="text-gray-600"> / Bulk Order</span>
       </div>
 
       {/* Header */}
       <h1 className="text-3xl font-bold text-gray-900 mb-8">
-        Create Ticket - New Product
+        Create Ticket – Bulk Order
       </h1>
 
       {/* Form */}
       <div className="max-w-2xl space-y-6">
-        {/* Product Name Text Input */}
+        {/* Product Name/SKU */}
         <div>
           <label className="block text-base font-medium text-gray-900 mb-2">
-            Product Name
+            Product Name/SKU
           </label>
           <input
-            name="productName"
-            value={formData.productName}
+            name="productId"
+            value={formData.productId}
             onChange={handleInputChange}
-            placeholder="Enter product name"
+            placeholder="Search product by name or SKU"
             className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 
                        placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-        {/* Subject */}
+        {/* Quantity */}
         <div>
           <label className="block text-base font-medium text-gray-900 mb-2">
-            Subject
+            Quantity
           </label>
           <input
-            name="subject"
-            value={formData.subject}
+            name="quantity"
+            type="number"
+            value={formData.quantity}
             onChange={handleInputChange}
-            placeholder="Ticket subject"
+            placeholder="Enter quantity"
             className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900
                        placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-        {/* notesFromSales */}
+        {/* Expected Unit Price */}
         <div>
           <label className="block text-base font-medium text-gray-900 mb-2">
-            Notes From Sales (optional)
+            Expected Unit Price
+          </label>
+          <input
+            name="expectedUnitPrice"
+            type="number"
+            value={formData.expectedUnitPrice}
+            onChange={handleInputChange}
+            placeholder="Enter expected unit price"
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900
+                       placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Total Expected Price */}
+        <div>
+          <label className="block text-base font-medium text-gray-900 mb-2">
+            Total Expected Price
+          </label>
+          <input
+            name="totalExpectedPrice"
+            type="number"
+            value={formData.totalExpectedPrice}
+            onChange={handleInputChange}
+            placeholder="Enter total expected price"
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900
+                       placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Preferred Supplier */}
+        <div>
+          <label className="block text-base font-medium text-gray-900 mb-2">
+            Preferred Supplier
+          </label>
+          <select
+            name="preferredSupplier"
+            value={formData.preferredSupplier}
+            onChange={handleInputChange}
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900
+                       focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select supplier</option>
+            <option value="supplier_1">Supplier 1</option>
+            <option value="supplier_2">Supplier 2</option>
+            <option value="supplier_3">Supplier 3</option>
+          </select>
+        </div>
+
+        {/* Delivery Date */}
+        <div>
+          <label className="block text-base font-medium text-gray-900 mb-2">
+            Delivery Date
+          </label>
+          <input
+            type="date"
+            name="deliveryDate"
+            value={formData.deliveryDate}
+            onChange={handleInputChange}
+            placeholder="Select delivery date"
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900
+                       focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Reason for Bulk Order / Notes */}
+        <div>
+          <label className="block text-base font-medium text-gray-900 mb-2">
+            Reason for Bulk Order / Notes
           </label>
           <textarea
-            name="notesFromSales"
-            value={formData.notesFromSales}
+            name="reasonForBulkOrder"
+            value={formData.reasonForBulkOrder}
             onChange={handleInputChange}
             rows={4}
-            placeholder="Describe your request..."
+            placeholder="Enter reason or notes..."
             className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900
-                       placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Pricing fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-base font-medium text-gray-900 mb-2">
-              Expected New Price
-            </label>
-            <input
-              name="expectedNewPrice"
-              value={formData.expectedNewPrice}
-              onChange={handleInputChange}
-              placeholder="e.g. 1500"
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 
-                         placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-base font-medium text-gray-900 mb-2">
-              Total Expected Price
-            </label>
-            <input
-              name="totalExpectedPrice"
-              value={formData.totalExpectedPrice}
-              onChange={handleInputChange}
-              placeholder="e.g. 3000"
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900
-                         placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Supplier & Delivery Date */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-base font-medium text-gray-900 mb-2">
-              Preferred Supplier
-            </label>
-            <input
-              name="preferredSupplier"
-              value={formData.preferredSupplier}
-              onChange={handleInputChange}
-              placeholder="Supplier name (optional)"
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900
-                          placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-base font-medium text-gray-900 mb-2">
-              Expected Delivery Date
-            </label>
-            <input
-              type="date"
-              name="expectedDeliveryDate"
-              value={formData.expectedDeliveryDate}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900
-                          focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Assigned To */}
-        <div>
-          <label className="block text-base font-medium text-gray-900 mb-2">
-            Assign To (optional)
-          </label>
-          <input
-            name="assignedTo"
-            value={formData.assignedTo}
-            onChange={handleInputChange}
-            placeholder="User ID / Username"
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 
                        placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -326,16 +317,18 @@ const CreateNewProductTicket = () => {
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-white"
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-300 bg-white"
               }`}
           >
             <div className="flex flex-col items-center">
               <Upload className="w-12 h-12 text-gray-400 mb-3" />
               <h3 className="text-base font-semibold text-gray-900 mb-1">
-                Drop your files here
+                Upload Supporting Documents
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                or click to browse (multiple files supported)
+                Drag & drop files here or
               </p>
               <input
                 id="file-input"
@@ -347,9 +340,9 @@ const CreateNewProductTicket = () => {
               />
               <label
                 htmlFor="file-input"
-                className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
+                className="px-6 py-2 bg-white text-gray-700 text-sm font-medium border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
               >
-                Choose Files
+                Browse
               </label>
             </div>
           </div>
@@ -409,7 +402,7 @@ const CreateNewProductTicket = () => {
             disabled={submitting}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-60 transition-colors"
           >
-            {submitting ? "Submitting..." : "Submit Ticket"}
+            {submitting ? "Submitting..." : "Submit Bulk Order Ticket"}
           </button>
         </div>
       </div>
@@ -417,4 +410,4 @@ const CreateNewProductTicket = () => {
   );
 };
 
-export default CreateNewProductTicket;
+export default CreateBulkOrderTicket;

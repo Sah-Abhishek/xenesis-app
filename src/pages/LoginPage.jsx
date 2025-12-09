@@ -34,7 +34,7 @@ export default function LoginPage() {
       console.log("Profile:", data.user.role);
 
       if (data.user.role === 'sales') {
-        navigate('/sales/dashboard')
+        navigate('/inventory')
       }
 
 

@@ -12,6 +12,7 @@ import TicketsPage from "./pages/TicketsPage.jsx";
 import CreateNewProductTicket from "./pages/Ticket/TicketNewProduct.jsx";
 import CreateExistingProductTicket from "./pages/Ticket/TicketExistingProduct.jsx";
 import AddProductPage from "./pages/sales/AddNewProduct.jsx";
+import CreateBulkOrderTicket from "./pages/Ticket/TicketBulkOrder.jsx";
 
 const AppRoutes = () => {
   return (
@@ -28,6 +29,8 @@ const AppRoutes = () => {
             <Route path="/ticketspage" element={<TicketsPage />} />
             <Route path="/tickets/createticket/newproduct" element={<CreateNewProductTicket />} />
             <Route path="/tickets/createticket/existingproduct" element={<CreateExistingProductTicket />} />
+            <Route path="/tickets/createticket/bulkorder" element={<CreateBulkOrderTicket />} />
+
             {/* <Route path="/sales/leads" element={<SalesLeads />} /> */}
           </Route>
         </Route>

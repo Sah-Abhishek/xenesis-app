@@ -78,7 +78,9 @@ const CreateTicket = () => {
           <p className="text-sm text-gray-600 mb-3">
             Submit a ticket for a large quantity or special pricing request
           </p>
-          <button className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded hover:bg-gray-200">
+          <button
+            onClick={() => navigate('/tickets/createticket/bulkorder')}
+            className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded hover:bg-gray-200">
             Create
           </button>
         </div>

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, X, FileText } from 'lucide-react';
+import { Upload, X, FileText, UserSquare2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios'
+import { useAuthStore } from '../../stores/useAuthStore';
+import toast from 'react-hot-toast';
 
 const CreateExistingProductTicket = () => {
   const [formData, setFormData] = useState({
@@ -10,8 +13,12 @@ const CreateExistingProductTicket = () => {
     reasonForUpdate: '',
     fieldsToModify: '',
     expectedNewPrice: '',
-    documents: []
+    supportingDocs: [],
+    ticketType: 'existing_product',
+
   });
+  const backUrl = import.meta.env.VITE_BACK_URL;
+  const { token } = useAuthStore()
 
   const [dragActive, setDragActive] = useState(false);
   const [documentPreviews, setDocumentPreviews] = useState([]);
@@ -55,7 +62,7 @@ const CreateExistingProductTicket = () => {
   const handleFiles = (files) => {
     setFormData((prev) => ({
       ...prev,
-      documents: [...prev.documents, ...files]
+      supportingDocs: [...prev.supportingDocs, ...files]
     }));
 
     const newPreviews = files.map((file) => ({
@@ -74,7 +81,7 @@ const CreateExistingProductTicket = () => {
     setDocumentPreviews((prev) => prev.filter((_, i) => i !== index));
     setFormData((prev) => ({
       ...prev,
-      documents: prev.documents.filter((_, i) => i !== index)
+      supportingDocs: prev.supportingDocs.filter((_, i) => i !== index)
     }));
   };
 
@@ -87,34 +94,44 @@ const CreateExistingProductTicket = () => {
   const handleSubmit = async () => {
     try {
       const submitData = new FormData();
-      submitData.append('productId', formData.productId);
-      submitData.append('currentProductName', formData.currentProductName);
-      submitData.append('quantity', formData.quantity);
-      submitData.append('reasonForUpdate', formData.reasonForUpdate);
-      submitData.append('fieldsToModify', formData.fieldsToModify);
-      submitData.append('expectedNewPrice', formData.expectedNewPrice);
 
-      formData.documents.forEach((doc) => {
-        submitData.append('documents', doc);
+      submitData.append("productId", formData.productId);
+      submitData.append("ticketType", formData.ticketType);   // ensure correct type
+      submitData.append("currentProductName", formData.currentProductName);
+      submitData.append("quantity", formData.quantity);
+      submitData.append("reasonForUpdate", formData.reasonForUpdate);
+      submitData.append("fieldsToModify", formData.fieldsToModify);
+      submitData.append("expectedNewPrice", formData.expectedNewPrice);
+
+      formData.supportingDocs.forEach((doc) => {
+        submitData.append("supportingDocs", doc);
       });
 
-      const response = await fetch('http://localhost:3000/tickets/existing-product', {
-        method: 'POST',
-        body: submitData
-      });
+      const response = await axios.post(
+        `${backUrl}/tickets/existing_product`,
+        submitData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,  // Axios sets multipart headers for FormData
+          },
+        }
+      );
 
-      if (response.ok) {
-        alert('Ticket submitted successfully!');
+      // Axios gives parsed response in response.data — no need for json()
+      // const data = response.data;  // use this if needed
+
+      if (response.status === 200 || response.status === 201) {
+        toast.success("Ticket submitted successfully!");
         handleCancel();
       } else {
-        alert('Failed to submit ticket');
+        toast.error("Failed to submit ticket");
       }
+
     } catch (error) {
-      console.error('Error submitting ticket:', error);
-      alert('Error submitting ticket');
+      console.error("Error submitting ticket:", error);
+      toast.error("Error submitting ticket");
     }
   };
-
   const handleCancel = () => {
     documentPreviews.forEach((p) => URL.revokeObjectURL(p.url));
 
@@ -125,7 +142,7 @@ const CreateExistingProductTicket = () => {
       reasonForUpdate: '',
       fieldsToModify: '',
       expectedNewPrice: '',
-      documents: []
+      supportingDocs: []
     });
     setDocumentPreviews([]);
   };
@@ -183,7 +200,7 @@ const CreateExistingProductTicket = () => {
               Quantity
             </label>
             <input
-              type="text"
+              type="number"
               name="quantity"
               value={formData.quantity}
               onChange={handleInputChange}
@@ -224,7 +241,7 @@ const CreateExistingProductTicket = () => {
               Expected New Price
             </label>
             <input
-              type="text"
+              type="number"
               name="expectedNewPrice"
               value={formData.expectedNewPrice}
               onChange={handleInputChange}
