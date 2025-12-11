@@ -13,6 +13,10 @@ import CreateNewProductTicket from "./pages/Ticket/TicketNewProduct.jsx";
 import CreateExistingProductTicket from "./pages/Ticket/TicketExistingProduct.jsx";
 import AddProductPage from "./pages/sales/AddNewProduct.jsx";
 import CreateBulkOrderTicket from "./pages/Ticket/TicketBulkOrder.jsx";
+import TicketDetails from "./pages/Ticket/TicketDetailsPage.jsx";
+import PurchaseDashboard from "./pages/purchase/PurchaseDashboard.jsx";
+import AddNewSupplier from "./pages/purchase/AddNewSuppliers.jsx";
+import SuppliersPage from "./pages/purchase/SuppliersPage.jsx";
 
 const AppRoutes = () => {
   return (
@@ -30,30 +34,26 @@ const AppRoutes = () => {
             <Route path="/tickets/createticket/newproduct" element={<CreateNewProductTicket />} />
             <Route path="/tickets/createticket/existingproduct" element={<CreateExistingProductTicket />} />
             <Route path="/tickets/createticket/bulkorder" element={<CreateBulkOrderTicket />} />
-
-            {/* <Route path="/sales/leads" element={<SalesLeads />} /> */}
+            <Route path="/tickets/:ticketId" element={<TicketDetails />} />
           </Route>
         </Route>
 
         {/* Purchase-only */}
-
-        <Route element={<Layout />}>
-          {/* <Route path="/purchase/dashboard" element={<PurchaseDashboard />} /> */}
-          {/*   </Route> */}
-          {/* </Route> */}
-          {/**/}
-          {/* Manager can see both or special pages */}
-          {/* <Route element={<RoleRoute allowed={["manager"]} />}> */}
-          {/*   <Route element={<Layout />}> */}
-          {/*     <Route path="/manager/dashboard" element={<ManagerDashboard />} /> */}
-          {/*   </Route> */}
-          {/* </Route> */}
-          {/**/}
-          {/* Shared pages for multiple roles */}
-          <Route element={<RoleRoute allowed={["manager", "sales", "purchase", "admin"]} />}>
-            {/* <Route path="/leads" element={<LeadsPage />} /> */}
-            <Route path="/inventory" element={<InventoryPage />} />
+        <Route element={<RoleRoute allowed={["purchase"]} />}>
+          <Route element={<Layout />}>
+            <Route path="/purchase/dashboard" element={<PurchaseDashboard />} />
             <Route path="/inventory/addnewproduct" element={<AddProductPage />} />
+            <Route path="/supplier/addnewsupplier" element={<AddNewSupplier />} />
+            <Route path="/suplierspage" element={<SuppliersPage />} />
+
+            {/* Add more purchase-only screens here */}
+          </Route>
+        </Route>
+
+        {/* Shared pages for multiple roles */}
+        <Route element={<RoleRoute allowed={["manager", "sales", "purchase", "admin"]} />}>
+          <Route element={<Layout />}>
+            <Route path="/inventory" element={<InventoryPage />} />
           </Route>
         </Route>
       </Route>

@@ -3,6 +3,7 @@ import { Upload, X, FileText } from "lucide-react";
 import axios from "axios";
 import { useAuthStore } from "../../stores/useAuthStore.js";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const CreateNewProductTicket = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ const CreateNewProductTicket = () => {
     totalExpectedPrice: "",
     expectedDeliveryDate: "",
     assignedTo: "",
+    priority: "medium",
     supportingDocs: [],
   });
 
@@ -106,6 +108,7 @@ const CreateNewProductTicket = () => {
       totalExpectedPrice: "",
       expectedDeliveryDate: "",
       assignedTo: "",
+      priority: "medium",
       supportingDocs: [],
     });
     setDocumentPreviews([]);
@@ -113,11 +116,11 @@ const CreateNewProductTicket = () => {
 
   const validate = () => {
     if (!formData.productName.trim()) {
-      alert("Please enter a product name.");
+      toast.error("Please enter a product name.");
       return false;
     }
     if (!formData.subject.trim()) {
-      alert("Please enter a subject.");
+      toast.error("Please enter a subject.");
       return false;
     }
     return true;
@@ -148,14 +151,14 @@ const CreateNewProductTicket = () => {
       const res = await axios.post(`${backUrl}/tickets`, payload, { headers });
 
       if (res.status === 201 || res.status === 200) {
-        alert("Ticket submitted successfully!");
+        toast.success("Ticket submitted successfully!");
         resetForm();
       } else {
-        alert(`Unexpected response: ${res.status}`);
+        toast.error(`Unexpected response: ${res.status}`);
       }
     } catch (err) {
       console.error("Error submitting ticket:", err);
-      alert(err.response?.data?.message || "Error submitting ticket");
+      toast.error(err.response?.data?.message || "Error submitting ticket");
     } finally {
       setSubmitting(false);
     }
@@ -313,6 +316,45 @@ const CreateNewProductTicket = () => {
             className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 
                        placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+
+        {/* Priority Selector */}
+        <div>
+          <label className="block text-base font-medium text-gray-900 mb-2">
+            Priority
+          </label>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, priority: "low" }))}
+              className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all ${formData.priority === "low"
+                ? "bg-green-600 text-white shadow-md"
+                : "bg-white text-gray-700 border border-gray-300 hover:border-green-500 hover:bg-green-50"
+                }`}
+            >
+              Low
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, priority: "medium" }))}
+              className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all ${formData.priority === "medium"
+                ? "bg-yellow-500 text-white shadow-md"
+                : "bg-white text-gray-700 border border-gray-300 hover:border-yellow-500 hover:bg-yellow-50"
+                }`}
+            >
+              Medium
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, priority: "high" }))}
+              className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all ${formData.priority === "high"
+                ? "bg-red-600 text-white shadow-md"
+                : "bg-white text-gray-700 border border-gray-300 hover:border-red-500 hover:bg-red-50"
+                }`}
+            >
+              High
+            </button>
+          </div>
         </div>
 
         {/* File Upload */}

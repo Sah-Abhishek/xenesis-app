@@ -3,6 +3,7 @@ import axios from "axios";
 import ProductCard from "../../components/inventory/ProductCard";
 import Pagination from "../../components/inventory/Pagination";
 import { useGetCategories } from "../../hooks/useGetCategories";
+import { useAuthStore } from "../../stores/useAuthStore";
 
 export default function InventoryPage() {
   const [products, setProducts] = useState([]);
@@ -13,6 +14,7 @@ export default function InventoryPage() {
   const [error, setError] = useState(null);
   const backUrl = import.meta.env.VITE_BACK_URL;
   const categories = useGetCategories()
+  const { user } = useAuthStore()
   console.log("These are the categories: ", categories)
 
   /* -------------------------------
@@ -81,10 +83,31 @@ export default function InventoryPage() {
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
             Inventory
           </h1>
+
+          {user.role === 'purchase' && (
+            <button
+              onClick={() => (window.location.href = "/inventory/addnewproduct")}
+              className="
+      px-5 py-2.5 
+      rounded-full 
+      bg-gray-800 
+      text-white 
+      text-sm 
+      font-medium 
+      shadow-sm
+      hover:bg-gray-900 
+      hover:shadow-md
+      transition-all
+    "
+            >
+              + Add New Product
+            </button>
+
+          )}
         </div>
 
         {/* Search Bar */}

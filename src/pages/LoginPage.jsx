@@ -29,13 +29,19 @@ export default function LoginPage() {
 
       toast.success("Login successful!");
 
-      console.log("Token:", data.token);
-      console.log("Profile:", data.user);
-      console.log("Profile:", data.user.role);
+      // console.log("Token:", data.token);
+      // console.log("Profile:", data.user);
+      // console.log("Profile:", data.user.role);
 
       if (data.user.role === 'sales') {
         navigate('/inventory')
+        return
       }
+      if (data.user.role === 'purchase') {
+        navigate('/purchase/dashboard')
+        return
+      }
+
 
 
 

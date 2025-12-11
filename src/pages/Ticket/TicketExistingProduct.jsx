@@ -13,6 +13,7 @@ const CreateExistingProductTicket = () => {
     reasonForUpdate: '',
     fieldsToModify: '',
     expectedNewPrice: '',
+    priority: 'medium',
     supportingDocs: [],
     ticketType: 'existing_product',
 
@@ -102,6 +103,7 @@ const CreateExistingProductTicket = () => {
       submitData.append("reasonForUpdate", formData.reasonForUpdate);
       submitData.append("fieldsToModify", formData.fieldsToModify);
       submitData.append("expectedNewPrice", formData.expectedNewPrice);
+      submitData.append("priority", formData.priority);
 
       formData.supportingDocs.forEach((doc) => {
         submitData.append("supportingDocs", doc);
@@ -142,6 +144,7 @@ const CreateExistingProductTicket = () => {
       reasonForUpdate: '',
       fieldsToModify: '',
       expectedNewPrice: '',
+      priority: 'medium',
       supportingDocs: []
     });
     setDocumentPreviews([]);
@@ -236,7 +239,7 @@ const CreateExistingProductTicket = () => {
             />
           </div>
 
-          <div className="mb-8">
+          <div className="mb-6">
             <label className="block text-sm font-medium text-gray-900 mb-2">
               Expected New Price
             </label>
@@ -248,6 +251,45 @@ const CreateExistingProductTicket = () => {
               placeholder="Enter new expected price"
               className="w-full px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+
+          {/* Priority Selector */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Priority
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, priority: "low" }))}
+                className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all ${formData.priority === "low"
+                  ? "bg-green-600 text-white shadow-md"
+                  : "bg-white text-gray-700 border border-gray-300 hover:border-green-500 hover:bg-green-50"
+                  }`}
+              >
+                Low
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, priority: "medium" }))}
+                className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all ${formData.priority === "medium"
+                  ? "bg-yellow-500 text-white shadow-md"
+                  : "bg-white text-gray-700 border border-gray-300 hover:border-yellow-500 hover:bg-yellow-50"
+                  }`}
+              >
+                Medium
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, priority: "high" }))}
+                className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all ${formData.priority === "high"
+                  ? "bg-red-600 text-white shadow-md"
+                  : "bg-white text-gray-700 border border-gray-300 hover:border-red-500 hover:bg-red-50"
+                  }`}
+              >
+                High
+              </button>
+            </div>
           </div>
 
           <div className="mb-8">

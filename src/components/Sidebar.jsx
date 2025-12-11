@@ -8,13 +8,11 @@ import { PiTicket } from "react-icons/pi";
 import { MdOutlineInventory2 } from "react-icons/md";
 import { GoPeople } from "react-icons/go";
 import { PiHandshakeLight } from "react-icons/pi";
+import { useAuthStore } from "../stores/useAuthStore";
 
 
 
-
-
-
-const navItems = [
+const salesNavItems = [
   { name: "Dashboard", icon: MdOutlineSpaceDashboard, path: "/sales/dashboard", size: 20 },
   { name: "Tickets", icon: PiTicket, path: "/ticketspage", size: 20 },
   { name: "Inventory", icon: MdOutlineInventory2, path: "/inventory", size: 20 },
@@ -22,9 +20,20 @@ const navItems = [
   { name: "Deals", icon: PiHandshakeLight, path: "/dealspage", size: 25 },
 ];
 
+const purchaseNavItems = [
+  {
+    name: "Dashboard", icon: MdOutlineSpaceDashboard, path: "/sales/purchase", size: 20
+  },
+  { name: "Tickets Request", icon: PiTicket, path: "/ticketrequestspage", size: 20 },
+  { name: "Inventory", icon: MdOutlineInventory2, path: "/inventory", size: 20 },
+  { name: "Suppliers", icon: GoPeople, path: "/suplierspage", size: 22 },
+
+];
+
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  var navItems;
 
   const handleLogout = () => {
     // ✅ Clear session data (adjust as needed)
@@ -34,6 +43,15 @@ export default function Sidebar() {
     // Redirect to login page
     navigate("/login");
   };
+  const { user } = useAuthStore()
+
+  if (user.role === 'sales') {
+    navItems = salesNavItems
+  } else if (user.role === 'purchase') {
+    navItems = purchaseNavItems
+  }
+
+
 
   return (
     <aside className="w-64 h-screen bg-white border-r border-gray-200 p-4 flex flex-col justify-between">
