@@ -9,11 +9,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const { loginSuccess } = useAuthStore();
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate();
 
   const backUrl = import.meta.env.VITE_BACK_URL;
 
   const handleSubmit = async (e) => {
+    setLoading(true);
     e.preventDefault();
 
     try {
@@ -44,12 +46,6 @@ export default function LoginPage() {
         return
       }
 
-
-
-
-
-      // Optional redirect:
-      // window.location.href = "/dashboard";
     } catch (error) {
       console.error("Login error:", error);
 
@@ -58,7 +54,7 @@ export default function LoginPage() {
       } else {
         toast.error("Server not reachable");
       }
-    }
+    } finally { setLoading(false) }
   };
 
   return (
@@ -132,9 +128,40 @@ export default function LoginPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-md"
+              disabled={loading}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-medium shadow-md transition-colors
+    ${loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gray-900 text-white hover:bg-gray-800"
+                }`}
             >
-              Sign In
+              {loading ? (
+                <>
+                  <svg
+                    className="w-5 h-5 animate-spin text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    />
+                  </svg>
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </button>
           </form>
 
