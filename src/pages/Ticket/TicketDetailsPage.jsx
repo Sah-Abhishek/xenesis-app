@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Search, Bell, User, Edit2, Upload } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '../../stores/useAuthStore';
+import toast from 'react-hot-toast';
 
 const TicketDetails = () => {
   const { ticketId } = useParams();
@@ -14,6 +15,7 @@ const TicketDetails = () => {
   const [responses, setResponses] = useState([]);
   const [responsesLoading, setResponsesLoading] = useState(true);
   const { user } = useAuthStore()
+  const [TicketCloseLoading, setTicketCloseLoading] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -21,9 +23,35 @@ const TicketDetails = () => {
     description: ''
   });
   const [attachments, setAttachments] = useState([]);
+  const [ticketStatus, setTicketStatus] = useState('')
+  console.log("This is the ticketStatus: ", ticketStatus)
 
   const backUrl = import.meta.env.VITE_BACK_URL;
   const { token } = useAuthStore();
+
+  const closeTicket = async () => {
+    setTicketCloseLoading(true)
+    try {
+      await axios.put(`${backUrl}/tickets/${ticketId}/status`, {
+        status: "completed"
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      // Update the local state
+      setTicketStatus("completed");
+      toast.success('Ticket closed successfully!');
+    } catch (error) {
+      console.error('Error closing ticket:', error);
+      toast.error('Failed to close ticket');
+    } finally {
+      setTicketCloseLoading(false)
+
+    }
+  };
+
 
   useEffect(() => {
     const fetchTicketDetails = async () => {
@@ -34,6 +62,7 @@ const TicketDetails = () => {
           }
         });
         setTicket(response.data.tickets[0]);
+        setTicketStatus(response.data.tickets[0].status)
         setLoading(false);
       } catch (error) {
         console.error('Error fetching ticket details:', error);
@@ -65,7 +94,7 @@ const TicketDetails = () => {
     if (ticketId) {
       fetchResponses();
     }
-  }, [ticketId, backUrl, token]);
+  }, [ticketId, backUrl, token,]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -122,9 +151,9 @@ const TicketDetails = () => {
       const fileInput = document.getElementById('file-upload');
       if (fileInput) fileInput.value = '';
 
-      alert('Response submitted successfully!');
+      toast.success('Response submitted successfully!');
     } catch (error) {
-      console.error('Error submitting response:', error);
+      toast.error('Error submitting response:', error);
       alert('Failed to submit response. Please try again.');
     } finally {
       setSubmitting(false);
@@ -299,10 +328,10 @@ const TicketDetails = () => {
                     </h2>
                     <p className="text-sm text-gray-600">{formatTicketType(ticket.ticket_type)}</p>
                   </div>
-                  {user.role === 'sales' &&
-                    < button className="flex items-center gap-2 px-3 py-2 text-sm text-white bg-red-500 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  {user.role === 'sales' && ticketStatus !== 'completed' &&
+                    < button onClick={closeTicket} className="flex items-center gap-2 px-3 py-2 text-sm text-white bg-red-500 border border-gray-300 rounded-lg hover:bg-rd-600">
                       {/* <Edit2 className="w-4 h-4" /> */}
-                      Close Ticket
+                      {TicketCloseLoading ? <span>Loading</span> : <span>Close Ticket</span>}
                     </button>
 
 
@@ -455,91 +484,94 @@ const TicketDetails = () => {
               </div>
 
               {/* Response Form */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Submit Response</h3>
-                <form onSubmit={handleSubmitResponse} className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="space-y-6">
-                    {/* Title */}
-                    <div>
-                      <label htmlFor="title" className="block text-sm font-medium text-gray-900 mb-2">
-                        Title
-                      </label>
-                      <input
-                        type="text"
-                        id="title"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        placeholder="Enter response title"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-
-                    {/* Negotiation Notes */}
-                    <div>
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-900 mb-2">
-                        Negotiation Notes
-                      </label>
-                      <textarea
-                        id="description"
-                        name="description"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        placeholder="Enter negotiation notes"
-                        rows="5"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                        required
-                      />
-                    </div>
-
-                    {/* Upload Proof */}
-                    <div>
-                      <label htmlFor="file-upload" className="block text-sm font-medium text-gray-900 mb-2">
-                        Upload Proof
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="file"
-                          id="file-upload"
-                          multiple
-                          onChange={handleFileChange}
-                          className="hidden"
-                          accept="image/*,.pdf,.doc,.docx"
-                        />
-                        <label
-                          htmlFor="file-upload"
-                          className="flex items-center justify-between w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-600 cursor-pointer hover:bg-gray-50"
-                        >
-                          <span>{attachments.length > 0 ? `${attachments.length} file(s) selected` : 'Upload file'}</span>
-                          <Upload className="w-5 h-5 text-gray-400" />
+              {ticketStatus !== 'completed' && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Submit Response</h3>
+                  <form onSubmit={handleSubmitResponse} className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="space-y-6">
+                      {/* Title */}
+                      <div>
+                        <label htmlFor="title" className="block text-sm font-medium text-gray-900 mb-2">
+                          Title
                         </label>
+                        <input
+                          type="text"
+                          id="title"
+                          name="title"
+                          value={formData.title}
+                          onChange={handleInputChange}
+                          placeholder="Enter response title"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
                       </div>
-                      {attachments.length > 0 && (
-                        <div className="mt-2 text-xs text-gray-600">
-                          {attachments.map((file, index) => (
-                            <div key={index}>{file.name}</div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Submit Button */}
-                    <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        disabled={submitting}
-                        className={`px-6 py-2 rounded-lg text-sm font-medium text-white transition-colors ${submitting
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-green-600 hover:bg-green-700'
-                          }`}
-                      >
-                        {submitting ? 'Submitting...' : 'Submit Response'}
-                      </button>
+                      {/* Negotiation Notes */}
+                      <div>
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-900 mb-2">
+                          Negotiation Notes
+                        </label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          placeholder="Enter negotiation notes"
+                          rows="5"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                          required
+                        />
+                      </div>
+
+                      {/* Upload Proof */}
+                      <div>
+                        <label htmlFor="file-upload" className="block text-sm font-medium text-gray-900 mb-2">
+                          Upload Proof
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            id="file-upload"
+                            multiple
+                            onChange={handleFileChange}
+                            className="hidden"
+                            accept="image/*,.pdf,.doc,.docx"
+                          />
+                          <label
+                            htmlFor="file-upload"
+                            className="flex items-center justify-between w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-600 cursor-pointer hover:bg-gray-50"
+                          >
+                            <span>{attachments.length > 0 ? `${attachments.length} file(s) selected` : 'Upload file'}</span>
+                            <Upload className="w-5 h-5 text-gray-400" />
+                          </label>
+                        </div>
+                        {attachments.length > 0 && (
+                          <div className="mt-2 text-xs text-gray-600">
+                            {attachments.map((file, index) => (
+                              <div key={index}>{file.name}</div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Submit Button */}
+                      <div className="flex justify-end">
+                        <button
+                          type="submit"
+                          disabled={submitting}
+                          className={`px-6 py-2 rounded-lg text-sm font-medium text-white transition-colors ${submitting
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-green-600 hover:bg-green-700'
+                            }`}
+                        >
+                          {submitting ? 'Submitting...' : 'Submit Response'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </form>
-              </div>
+                  </form>
+                </div>
+
+              )}
             </div>
 
             {/* Right Column - Supporting Documents */}

@@ -27,7 +27,7 @@ const roleConfig = {
 };
 
 const salesNavItems = [
-  { name: "Dashboard", icon: MdOutlineSpaceDashboard, path: "/sales/dashboard", size: 20 },
+  // { name: "Dashboard", icon: MdOutlineSpaceDashboard, path: "/sales/dashboard", size: 20 },
   { name: "Tickets", icon: PiTicket, path: "/ticketspage", size: 20 },
   { name: "Inventory", icon: MdOutlineInventory2, path: "/inventory", size: 20 },
   { name: "Leads", icon: GoPeople, path: "/leadspage", size: 20 },
