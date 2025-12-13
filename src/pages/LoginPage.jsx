@@ -36,11 +36,14 @@ export default function LoginPage() {
       if (data.user.role === 'sales') {
         navigate('/inventory')
         return
-      }
-      if (data.user.role === 'purchase') {
+      } else if (data.user.role === 'purchase') {
         navigate('/purchase/dashboard')
         return
+      } else if (data.user.role === 'admin') {
+        navigate('/admin/dashboard')
+        return
       }
+
 
 
 

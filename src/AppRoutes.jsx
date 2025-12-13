@@ -17,6 +17,9 @@ import TicketDetails from "./pages/Ticket/TicketDetailsPage.jsx";
 import PurchaseDashboard from "./pages/purchase/PurchaseDashboard.jsx";
 import AddNewSupplier from "./pages/purchase/AddNewSuppliers.jsx";
 import SuppliersPage from "./pages/purchase/SuppliersPage.jsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import UserManagement from "./pages/admin/UserManagement.jsx";
+import TicketsPageAdmin from "./pages/admin/TicketsPageAdmin.jsx";
 
 const AppRoutes = () => {
   return (
@@ -34,7 +37,6 @@ const AppRoutes = () => {
             <Route path="/tickets/createticket/newproduct" element={<CreateNewProductTicket />} />
             <Route path="/tickets/createticket/existingproduct" element={<CreateExistingProductTicket />} />
             <Route path="/tickets/createticket/bulkorder" element={<CreateBulkOrderTicket />} />
-            <Route path="/tickets/:ticketId" element={<TicketDetails />} />
           </Route>
         </Route>
 
@@ -43,17 +45,33 @@ const AppRoutes = () => {
           <Route element={<Layout />}>
             <Route path="/purchase/dashboard" element={<PurchaseDashboard />} />
             <Route path="/inventory/addnewproduct" element={<AddProductPage />} />
-            <Route path="/supplier/addnewsupplier" element={<AddNewSupplier />} />
-            <Route path="/suplierspage" element={<SuppliersPage />} />
+
+
+            {/* Add more purchase-only screens here */}
+          </Route>
+        </Route>
+        <Route element={<RoleRoute allowed={["admin"]} />}>
+          <Route element={<Layout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/usermanagement" element={<UserManagement />} />
+            <Route path="/admin/ticketspage" element={<TicketsPageAdmin />} />
+
+
 
             {/* Add more purchase-only screens here */}
           </Route>
         </Route>
 
+
         {/* Shared pages for multiple roles */}
         <Route element={<RoleRoute allowed={["manager", "sales", "purchase", "admin"]} />}>
           <Route element={<Layout />}>
+            <Route path="/tickets/:ticketId" element={<TicketDetails />} />
             <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/supplier/addnewsupplier" element={<AddNewSupplier />} />
+            <Route path="/suplierspage" element={<SuppliersPage />} />
+
+
           </Route>
         </Route>
       </Route>

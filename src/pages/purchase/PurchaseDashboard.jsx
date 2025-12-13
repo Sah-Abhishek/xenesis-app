@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useNavigate } from 'react-router-dom';
 
 // Mock auth store - replace with your actual implementation
 
@@ -12,12 +13,14 @@ const PurchaseDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const backUrl = import.meta.env.VITE_BACK_URL;
+  const navigate = useNavigate()
   const { user, token } = useAuthStore();
 
   const fetchTickets = async (page = currentPage) => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://192.168.1.24:4000/tickets?page=${page}&limit=3`, {
+      const response = await axios.get(`${backUrl}/tickets?page=${page}&limit=3`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -245,6 +248,10 @@ const PurchaseDashboard = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status/Due Date
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -277,6 +284,14 @@ const PurchaseDashboard = () => {
                           {ticket.expected_delivery_date ? getDueDateText(ticket.expected_delivery_date) : getStatusText(ticket.status)}
                         </span>
                       </td>
+                      <td className="p-4">
+                        <button
+                          onClick={() => navigate(`/tickets/${ticket.id}`)}
+                          className="text-sm text-blue-600 hover:underline" >
+                          View Details
+                        </button>
+                      </td>
+
                     </tr>
                   ))
                 )}

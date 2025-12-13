@@ -15,7 +15,7 @@ const CreateTicket = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const itemsPerPage = 2;
+  const itemsPerPage = 10;
 
   const navigate = useNavigate()
   const backUrl = import.meta.env.VITE_BACK_URL;
@@ -321,7 +321,7 @@ const CreateTicket = () => {
                     <tr key={ticket.id} className="border-b border-gray-100">
                       <td className="p-4 text-sm text-gray-900">#{ticket.id.slice(0, 5)}</td>
                       <td className="p-4 text-sm text-blue-600">
-                        {ticket.product_name || ticket.subject || 'N/A'}
+                        {ticket.product_name || ticket.subject || ticket.product_id || 'N/A'}
                       </td>
                       <td className="p-4 text-sm text-gray-900">{formatTicketType(ticket.ticket_type)}</td>
                       <td className="p-4">

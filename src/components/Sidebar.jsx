@@ -11,6 +11,20 @@ import { PiHandshakeLight } from "react-icons/pi";
 import { useAuthStore } from "../stores/useAuthStore";
 
 
+const roleConfig = {
+  sales: {
+    label: "Sales User",
+    color: "bg-blue-100 text-blue-700",
+  },
+  purchase: {
+    label: "Purchase User",
+    color: "bg-green-100 text-green-700",
+  },
+  admin: {
+    label: "Administrator",
+    color: "bg-purple-100 text-purple-700",
+  },
+};
 
 const salesNavItems = [
   { name: "Dashboard", icon: MdOutlineSpaceDashboard, path: "/sales/dashboard", size: 20 },
@@ -22,13 +36,25 @@ const salesNavItems = [
 
 const purchaseNavItems = [
   {
-    name: "Dashboard", icon: MdOutlineSpaceDashboard, path: "/sales/purchase", size: 20
+    name: "Dashboard", icon: MdOutlineSpaceDashboard, path: "/purchase/dashboard", size: 20
   },
   { name: "Tickets Request", icon: PiTicket, path: "/ticketrequestspage", size: 20 },
   { name: "Inventory", icon: MdOutlineInventory2, path: "/inventory", size: 20 },
   { name: "Suppliers", icon: GoPeople, path: "/suplierspage", size: 22 },
 
 ];
+
+const adminNavItems = [
+  {
+    name: "Dashboard", icon: MdOutlineSpaceDashboard, path: "/admin/dashboard", size: 20
+  },
+  { name: "User and Role management", icon: PiTicket, path: "/admin/usermanagement", size: 20 },
+  { name: "Inventory", icon: MdOutlineInventory2, path: "/inventory", size: 20 },
+  { name: "Suppliers", icon: GoPeople, path: "/suplierspage", size: 22 },
+  { name: "Tickets", icon: GoPeople, path: "/admin/ticketspage", size: 22 },
+
+
+]
 
 export default function Sidebar() {
   const location = useLocation();
@@ -45,10 +71,14 @@ export default function Sidebar() {
   };
   const { user } = useAuthStore()
 
+
   if (user.role === 'sales') {
     navItems = salesNavItems
   } else if (user.role === 'purchase') {
     navItems = purchaseNavItems
+  } else if (user.role === 'admin') {
+    navItems = adminNavItems
+
   }
 
 
@@ -65,6 +95,23 @@ export default function Sidebar() {
             </h1>
           </div>
           <p className="text-xs text-gray-400 ml-8">v1.0.0</p>
+          {/* Role Badge */}
+          <div className="flex items-center gap-3 mt-4 p-3 rounded-lg bg-gray-50 border">
+            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold uppercase">
+              {user.role?.charAt(0)}
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-gray-800">
+                {roleConfig[user.role]?.label}
+              </p>
+              <span
+                className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${roleConfig[user.role]?.color}`}
+              >
+                {user.role}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Navigation */}

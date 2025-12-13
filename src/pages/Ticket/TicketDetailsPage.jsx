@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Search, Bell, User, Edit2 } from 'lucide-react';
+import { Search, Bell, User, Edit2, Upload } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '../../stores/useAuthStore';
 
@@ -10,12 +10,22 @@ const TicketDetails = () => {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [submitting, setSubmitting] = useState(false);
+  const [responses, setResponses] = useState([]);
+  const [responsesLoading, setResponsesLoading] = useState(true);
+  const { user } = useAuthStore()
+
+  // Form state
+  const [formData, setFormData] = useState({
+    title: '',
+    description: ''
+  });
+  const [attachments, setAttachments] = useState([]);
 
   const backUrl = import.meta.env.VITE_BACK_URL;
   const { token } = useAuthStore();
 
   useEffect(() => {
-    // console.log("This is the url: ", `${backUrl}/tickets/${ticketId}`,)
     const fetchTicketDetails = async () => {
       try {
         const response = await axios.get(`${backUrl}/tickets/${ticketId}`, {
@@ -23,7 +33,6 @@ const TicketDetails = () => {
             Authorization: `Bearer ${token}`
           }
         });
-        // console.log("This is the response: ", response)
         setTicket(response.data.tickets[0]);
         setLoading(false);
       } catch (error) {
@@ -36,6 +45,91 @@ const TicketDetails = () => {
       fetchTicketDetails();
     }
   }, [ticketId, backUrl, token]);
+
+  useEffect(() => {
+    const fetchResponses = async () => {
+      try {
+        const response = await axios.get(`${backUrl}/tickets/${ticketId}/responses`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setResponses(response.data);
+        setResponsesLoading(false);
+      } catch (error) {
+        console.error('Error fetching responses:', error);
+        setResponsesLoading(false);
+      }
+    };
+
+    if (ticketId) {
+      fetchResponses();
+    }
+  }, [ticketId, backUrl, token]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setAttachments(files);
+  };
+
+  const handleSubmitResponse = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('description', formData.description);
+
+      attachments.forEach((file) => {
+        formDataToSend.append('attachments', file);
+      });
+
+      const response = await axios.post(
+        `${backUrl}/tickets/${ticketId}/responses`,
+        formDataToSend,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      console.log('Response submitted successfully:', response.data);
+
+      // Refresh responses
+      const responsesResponse = await axios.get(`${backUrl}/tickets/${ticketId}/responses`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setResponses(responsesResponse.data);
+
+      // Reset form
+      setFormData({ title: '', description: '' });
+      setAttachments([]);
+
+      // Reset file input
+      const fileInput = document.getElementById('file-upload');
+      if (fileInput) fileInput.value = '';
+
+      alert('Response submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting response:', error);
+      alert('Failed to submit response. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -90,6 +184,14 @@ const TicketDetails = () => {
     }
   };
 
+  const parseAttachments = (attachments) => {
+    try {
+      return JSON.parse(attachments);
+    } catch {
+      return [];
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -120,14 +222,6 @@ const TicketDetails = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* <div className="relative"> */}
-          {/*   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" /> */}
-          {/*   <input */}
-          {/*     type="text" */}
-          {/*     placeholder="Search" */}
-          {/*     className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64" */}
-          {/*   /> */}
-          {/* </div> */}
           <button className="p-2 hover:bg-gray-100 rounded-lg">
             <Bell className="w-5 h-5 text-gray-600" />
           </button>
@@ -146,13 +240,6 @@ const TicketDetails = () => {
           >
             Tickets
           </span>
-          {/* <span className="mx-2">/</span> */}
-          {/* <span */}
-          {/*   onClick={() => navigate('/ticketspage')} */}
-          {/*   className="cursor-pointer hover:text-blue-600" */}
-          {/* > */}
-          {/*   Recent Tickets */}
-          {/* </span> */}
           <span className="mx-2">/</span>
           <span>Ticket #{ticket.id.slice(0, 5)}</span>
         </div>
@@ -177,24 +264,24 @@ const TicketDetails = () => {
             >
               Overview
             </button>
-            <button
-              onClick={() => setActiveTab('activity')}
-              className={`pb-3 text-sm font-medium transition-colors ${activeTab === 'activity'
-                ? 'text-gray-900 border-b-2 border-gray-900'
-                : 'text-gray-600 hover:text-gray-900'
-                }`}
-            >
-              Activity
-            </button>
-            <button
-              onClick={() => setActiveTab('details')}
-              className={`pb-3 text-sm font-medium transition-colors ${activeTab === 'details'
-                ? 'text-gray-900 border-b-2 border-gray-900'
-                : 'text-gray-600 hover:text-gray-900'
-                }`}
-            >
-              Details
-            </button>
+            {/* <button */}
+            {/*   onClick={() => setActiveTab('activity')} */}
+            {/*   className={`pb-3 text-sm font-medium transition-colors ${activeTab === 'activity' */}
+            {/*     ? 'text-gray-900 border-b-2 border-gray-900' */}
+            {/*     : 'text-gray-600 hover:text-gray-900' */}
+            {/*     }`} */}
+            {/* > */}
+            {/*   Activity */}
+            {/* </button> */}
+            {/* <button */}
+            {/*   onClick={() => setActiveTab('details')} */}
+            {/*   className={`pb-3 text-sm font-medium transition-colors ${activeTab === 'details' */}
+            {/*     ? 'text-gray-900 border-b-2 border-gray-900' */}
+            {/*     : 'text-gray-600 hover:text-gray-900' */}
+            {/*     }`} */}
+            {/* > */}
+            {/*   Details */}
+            {/* </button> */}
           </div>
         </div>
 
@@ -212,10 +299,14 @@ const TicketDetails = () => {
                     </h2>
                     <p className="text-sm text-gray-600">{formatTicketType(ticket.ticket_type)}</p>
                   </div>
-                  <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <Edit2 className="w-4 h-4" />
-                    Edit Ticket
-                  </button>
+                  {user.role === 'sales' &&
+                    < button className="flex items-center gap-2 px-3 py-2 text-sm text-white bg-red-500 border border-gray-300 rounded-lg hover:bg-gray-50">
+                      {/* <Edit2 className="w-4 h-4" /> */}
+                      Close Ticket
+                    </button>
+
+
+                  }
                 </div>
               </div>
 
@@ -309,6 +400,146 @@ const TicketDetails = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Conversation History */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Conversation History</h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  {responsesLoading ? (
+                    <div className="text-center py-8 text-gray-600">Loading responses...</div>
+                  ) : responses.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">No responses yet</div>
+                  ) : (
+                    <div className="space-y-6">
+                      {responses.map((response, index) => {
+                        const responseAttachments = parseAttachments(response.attachments);
+                        return (
+                          <div key={response.id} className="border-b border-gray-200 last:border-b-0 pb-6 last:pb-0">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <User className="w-5 h-5 text-blue-600" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-medium text-gray-900">{response.responded_by}</span>
+                                  <span className="text-xs text-gray-500">{formatDate(response.created_at)}</span>
+                                </div>
+                                <h4 className="text-sm font-semibold text-gray-900 mb-2">{response.title}</h4>
+                                <p className="text-sm text-gray-700 mb-3">{response.description}</p>
+
+                                {responseAttachments.length > 0 && (
+                                  <div className="space-y-2">
+                                    <p className="text-xs font-medium text-gray-600">Attachments:</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      {responseAttachments.map((attachment, idx) => (
+                                        <div key={idx} className="border border-gray-200 rounded-lg overflow-hidden">
+                                          <img
+                                            src={attachment}
+                                            alt={`Attachment ${idx + 1}`}
+                                            className="w-full h-32 object-cover cursor-pointer hover:opacity-75 transition-opacity"
+                                            onClick={() => window.open(attachment, '_blank')}
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Response Form */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Submit Response</h3>
+                <form onSubmit={handleSubmitResponse} className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="space-y-6">
+                    {/* Title */}
+                    <div>
+                      <label htmlFor="title" className="block text-sm font-medium text-gray-900 mb-2">
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        value={formData.title}
+                        onChange={handleInputChange}
+                        placeholder="Enter response title"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+
+                    {/* Negotiation Notes */}
+                    <div>
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-900 mb-2">
+                        Negotiation Notes
+                      </label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        placeholder="Enter negotiation notes"
+                        rows="5"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        required
+                      />
+                    </div>
+
+                    {/* Upload Proof */}
+                    <div>
+                      <label htmlFor="file-upload" className="block text-sm font-medium text-gray-900 mb-2">
+                        Upload Proof
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          id="file-upload"
+                          multiple
+                          onChange={handleFileChange}
+                          className="hidden"
+                          accept="image/*,.pdf,.doc,.docx"
+                        />
+                        <label
+                          htmlFor="file-upload"
+                          className="flex items-center justify-between w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-600 cursor-pointer hover:bg-gray-50"
+                        >
+                          <span>{attachments.length > 0 ? `${attachments.length} file(s) selected` : 'Upload file'}</span>
+                          <Upload className="w-5 h-5 text-gray-400" />
+                        </label>
+                      </div>
+                      {attachments.length > 0 && (
+                        <div className="mt-2 text-xs text-gray-600">
+                          {attachments.map((file, index) => (
+                            <div key={index}>{file.name}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className={`px-6 py-2 rounded-lg text-sm font-medium text-white transition-colors ${submitting
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-green-600 hover:bg-green-700'
+                          }`}
+                      >
+                        {submitting ? 'Submitting...' : 'Submit Response'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
             </div>
 
             {/* Right Column - Supporting Documents */}
@@ -349,7 +580,7 @@ const TicketDetails = () => {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 };
 
