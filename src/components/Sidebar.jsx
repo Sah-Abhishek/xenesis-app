@@ -26,6 +26,8 @@ const roleConfig = {
   },
 };
 
+const disabled = ['leads', 'deals', 'Tickets Request']
+
 const salesNavItems = [
   // { name: "Dashboard", icon: MdOutlineSpaceDashboard, path: "/sales/dashboard", size: 20 },
   { name: "Tickets", icon: PiTicket, path: "/ticketspage", size: 20 },
@@ -38,7 +40,7 @@ const purchaseNavItems = [
   {
     name: "Dashboard", icon: MdOutlineSpaceDashboard, path: "/purchase/dashboard", size: 20
   },
-  { name: "Tickets Request", icon: PiTicket, path: "/ticketrequestspage", size: 20 },
+  // { name: "Tickets Request", icon: PiTicket, path: "/ticketrequestspage", size: 20 },
   { name: "Inventory", icon: MdOutlineInventory2, path: "/inventory", size: 20 },
   { name: "Suppliers", icon: GoPeople, path: "/suplierspage", size: 22 },
 
@@ -118,12 +120,33 @@ export default function Sidebar() {
         <nav className="space-y-1">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
+            const isDisabled = disabled.includes(item.name.toLowerCase());
+
+            const baseClasses =
+              "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors";
+
+            const activeClasses = "bg-[#F7FAFC] font-medium";
+            const hoverClasses = "text-gray-700 hover:bg-gray-100";
+            const disabledClasses =
+              "text-gray-400 cursor-not-allowed opacity-60";
+
+            if (isDisabled) {
+              return (
+                <div
+                  key={item.name}
+                  className={`${baseClasses} ${disabledClasses}`}
+                >
+                  <item.icon size={item.size} />
+                  <span className="text-sm">{item.name}</span>
+                </div>
+              );
+            }
 
             return (
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive ? "bg-[#F7FAFC] font-medium" : "text-gray-700 hover:bg-gray-100"
+                className={`${baseClasses} ${isActive ? activeClasses : hoverClasses
                   }`}
               >
                 <item.icon size={item.size} />
