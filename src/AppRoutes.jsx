@@ -24,7 +24,7 @@ import TicketsPageAdmin from "./pages/admin/TicketsPageAdmin.jsx";
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<LoginPage />} />
       <Route path="/login" element={<LoginPage />} />
 
       {/* All protected */}
