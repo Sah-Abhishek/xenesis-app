@@ -24,7 +24,7 @@ const TicketDetails = () => {
   });
   const [attachments, setAttachments] = useState([]);
   const [ticketStatus, setTicketStatus] = useState('')
-  console.log("This is the ticketStatus: ", ticketStatus)
+  // console.log("This is the ticketStatus: ", ticketStatus)
 
   const backUrl = import.meta.env.VITE_BACK_URL;
   const { token } = useAuthStore();
@@ -264,7 +264,13 @@ const TicketDetails = () => {
         {/* Breadcrumb */}
         <div className="text-sm text-gray-600 mb-6">
           <span
-            onClick={() => navigate('/ticketspage')}
+            onClick={() => {
+              user.role === 'purchase' ? console.log("This is the route: ", '/ticketspage')
+                :
+                console.log("This is the rute: ", '/purchase/dashboard')
+              user.role === 'sales' ? navigate('/ticketspage') : navigate('/purchase/dashboard')
+            }
+            }
             className="cursor-pointer hover:text-blue-600 hover:underline"
           >
             Tickets

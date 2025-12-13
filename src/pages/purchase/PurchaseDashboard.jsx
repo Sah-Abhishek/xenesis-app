@@ -186,7 +186,7 @@ const PurchaseDashboard = () => {
                   <div className="text-sm text-gray-600 mb-3">
                     <div>Quantity: {ticket.quantity || 'N/A'} | Exp Price: ₹{parseFloat(ticket.expected_new_price || 0).toFixed(0)}</div>
                   </div>
-                  <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 text-sm font-medium py-2 px-4 rounded transition-colors">
+                  <button onClick={() => navigate(`/tickets/${ticket.id}`)} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 text-sm font-medium py-2 px-4 rounded transition-colors">
                     Respond Now
                   </button>
                 </div>

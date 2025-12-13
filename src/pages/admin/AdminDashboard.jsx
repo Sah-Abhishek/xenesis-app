@@ -10,9 +10,8 @@ const AdminDashboard = () => {
   const [submitting, setSubmitting] = useState(false);
   const [stats, setStats] = useState({
     totalUsers: { sales: 0, purchase: 0, admin: 0 },
-    tickets: { pending: 8, inProgress: 15, completed: 45 },
-    inventory: { totalProducts: 450, lowStock: 15, categories: 8 },
-    catalog: { totalProducts: 450 }
+    tickets: { pending: 0, completed: 0 },
+    inventory: { productCount: 0, supplierCount: 0 }
   });
 
   const [newUser, setNewUser] = useState({
@@ -27,6 +26,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchStats();
   }, []);
 
   const fetchUsers = async () => {
@@ -37,24 +37,39 @@ const AdminDashboard = () => {
         }
       });
       setUsers(response.data);
-
-      // Calculate user statistics
-      const userStats = response.data.reduce((acc, user) => {
-        if (user.role === 'sales') acc.sales++;
-        else if (user.role === 'purchase') acc.purchase++;
-        else if (user.role === 'admin') acc.admin++;
-        return acc;
-      }, { sales: 0, purchase: 0, admin: 0 });
-
-      setStats(prev => ({
-        ...prev,
-        totalUsers: userStats
-      }));
-
       setLoading(false);
     } catch (error) {
       console.error('Error fetching users:', error);
       setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get(`${backUrl}/admin/stats`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      // Update stats with API data
+      setStats({
+        totalUsers: {
+          sales: response.data.user.sales || 0,
+          purchase: response.data.user.purchase || 0,
+          admin: response.data.user.admin || 0
+        },
+        tickets: {
+          pending: response.data.tickets.pending || 0,
+          completed: response.data.tickets.completed || 0
+        },
+        inventory: {
+          productCount: response.data.inventory.productCount || 0,
+          supplierCount: response.data.inventory.supplierCount || 0
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
     }
   };
 
@@ -86,7 +101,7 @@ const AdminDashboard = () => {
 
     try {
       const response = await axios.post(
-        `${backUrl}/admin/add-user`,
+        `${backUrl}/admin/users`,
         newUser,
         {
           headers: {
@@ -98,8 +113,9 @@ const AdminDashboard = () => {
 
       console.log('User created successfully:', response.data);
 
-      // Refresh users list
+      // Refresh users list and stats
       await fetchUsers();
+      await fetchStats();
 
       // Close modal and reset form
       handleCloseModal();
@@ -134,7 +150,7 @@ const AdminDashboard = () => {
       {/* Summary Section */}
       <div className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 mb-6">Summary</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Total Users Card */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Total Users</h3>
@@ -163,10 +179,6 @@ const AdminDashboard = () => {
                 <span className="text-sm font-semibold text-gray-900">{stats.tickets.pending}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-gray-700">In Progress:</span>
-                <span className="text-sm font-semibold text-gray-900">{stats.tickets.inProgress}</span>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-sm font-medium text-gray-700">Completed:</span>
                 <span className="text-sm font-semibold text-gray-900">{stats.tickets.completed}</span>
               </div>
@@ -179,29 +191,25 @@ const AdminDashboard = () => {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm font-medium text-gray-700">Total Products:</span>
-                <span className="text-sm font-semibold text-gray-900">{stats.inventory.totalProducts}</span>
+                <span className="text-sm font-semibold text-gray-900">{stats.inventory.productCount}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-gray-700">Low Stock:</span>
-                <span className="text-sm font-semibold text-gray-900">{stats.inventory.lowStock}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium text-gray-700">Categories:</span>
-                <span className="text-sm font-semibold text-gray-900">{stats.inventory.categories}</span>
+                <span className="text-sm font-medium text-gray-700">Suppliers:</span>
+                <span className="text-sm font-semibold text-gray-900">{stats.inventory.supplierCount}</span>
               </div>
             </div>
           </div>
 
           {/* Product Catalog Health Card */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Product Catalog Health</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm font-medium text-gray-700">Total Products:</span>
-                <span className="text-sm font-semibold text-gray-900">{stats.catalog.totalProducts}</span>
-              </div>
-            </div>
-          </div>
+          {/* <div className="bg-white rounded-lg border border-gray-200 p-6"> */}
+          {/*   <h3 className="text-xl font-semibold text-gray-900 mb-4">Product Catalog Health</h3> */}
+          {/*   <div className="space-y-2"> */}
+          {/*     <div className="flex justify-between"> */}
+          {/*       <span className="text-sm font-medium text-gray-700">Total Products:</span> */}
+          {/*       <span className="text-sm font-semibold text-gray-900">{stats.inventory.productCount}</span> */}
+          {/*     </div> */}
+          {/*   </div> */}
+          {/* </div> */}
         </div>
       </div>
 
