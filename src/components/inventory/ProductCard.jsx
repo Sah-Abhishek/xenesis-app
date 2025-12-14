@@ -13,43 +13,48 @@ const formatDateShort = (iso) => {
 };
 
 const ProductCard = ({ product }) => {
-  // console.log("This is the product in the productcard: ", product)
+  // Safely get the first image URL or use a placeholder
+  const imageUrl = product.images && product.images.length > 0
+    ? product.images[0].url
+    : "https://via.placeholder.com/400x400?text=No+Image";
+
+  // Handle both 'name' and 'product_name' fields
+  const productName = product.name || product.product_name || "Unnamed Product";
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Image */}
       <div className="h-36 md:h-40 lg:h-44 w-full bg-gradient-to-b from-gray-100 to-gray-50 flex items-center justify-center">
         <img
-          src={product.images[0].url}
-          alt={product.name}
+          src={imageUrl}
+          alt={productName}
           className="object-cover h-full w-full"
           style={{ borderRadius: "16px 16px 0 0" }}
+          onError={(e) => {
+            e.target.src = "https://via.placeholder.com/400x400?text=No+Image";
+          }}
         />
       </div>
-
       {/* Info */}
       <div className="p-3 md:p-4">
         <h3 className="text-sm md:text-base font-medium text-gray-800">
-          {product.name}
+          {productName}
         </h3>
-
         <p className="mt-2 text-xs text-gray-500 leading-relaxed">
           <span className="block">
-            <span className="font-semibold text-gray-600">SKU:</span> {product.sku} ·{" "}
-            <span className="font-semibold text-gray-600">Category:</span> {product.category}
+            <span className="font-semibold text-gray-600">SKU:</span> {product.sku || "N/A"} ·{" "}
+            <span className="font-semibold text-gray-600">Category:</span> {product.category || "Uncategorized"}
           </span>
-
           <span className="block">
-            <span className="font-semibold text-gray-600">Supplier:</span> {product.supplier} ·{" "}
-            <span className="font-semibold text-gray-600">Price:</span> {formatCurrency(product.price)}
+            <span className="font-semibold text-gray-600">Supplier:</span> {product.supplier || "N/A"} ·{" "}
+            <span className="font-semibold text-gray-600">Price:</span> {formatCurrency(parseFloat(product.price))}
           </span>
-
           <span className="block">
-            <span className="font-semibold text-gray-600">Stock:</span> {product.stock} ·{" "}
+            <span className="font-semibold text-gray-600">Stock:</span> {product.stock ?? "N/A"} ·{" "}
             <span className="font-semibold text-gray-600">Updated:</span>{" "}
-            {formatDateShort(product.updated)}
+            {formatDateShort(product.updated || product.created_at)}
           </span>
         </p>
-
         <div className="mt-3">
           <a
             href="#"
